@@ -18,6 +18,14 @@ const DashboardPage: React.FC = () => {
             comingSoon: false,
         },
         { 
+            icon: IconPhoto, 
+            title: ptBR.editInstagramCardTitle, 
+            subtitle: ptBR.editInstagramCardSubtitle, 
+            buttonText: ptBR.editInstagramCardButton,
+            href: '#instagram-editor',
+            comingSoon: false,
+        },
+        { 
             icon: IconAnalytics, 
             title: ptBR.navAnalytics, 
             subtitle: "Visualize métricas de performance.", 

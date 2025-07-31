@@ -19,6 +19,9 @@ export const ptBR = {
     editPhotosCardTitle: 'Editar Fotos ADS',
     editPhotosCardSubtitle: 'Converta e edite imagens para o formato de anúncio.',
     editPhotosCardButton: 'Começar a Editar',
+    editInstagramCardTitle: 'Editar Fotos Instagram',
+    editInstagramCardSubtitle: 'Crie layouts para posts do Instagram (1350x1080).',
+    editInstagramCardButton: 'Editar Instagram',
     comingSoon: 'Em Breve',
     
     // Sidebar
@@ -64,6 +67,16 @@ export const ptBR = {
     bottomLeftSection: 'Seção Inferior Esquerda',
     bottomRightSection: 'Seção Inferior Direita',
     clearSlot: 'Limpar Slot',
+
+    // Instagram Editor
+    instagramEditorTitle: 'Layout Instagram (1350x1080)',
+    instagramFinalPreviewTitle: 'Prévia Final do Instagram',
+    addMainImage: 'Adicionar imagem principal',
+    addTopRightImage: 'Adicionar imagem superior direita',
+    addBottomRightImage: 'Adicionar imagem inferior direita',
+    mainSection: 'Seção Principal',
+    topRightSection: 'Seção Superior Direita',
+    bottomRightSection: 'Seção Inferior Direita',
     
     // Image Card & Controls
     swapImage: 'Trocar Imagem',
@@ -75,8 +88,16 @@ export const ptBR = {
     brightness: 'Brilho',
     contrast: 'Contraste',
     saturation: 'Vibração',
-    shadows: 'Sombras',
+    highlights: 'Realce',
     sharpness: 'Nitidez',
+    positionX: 'Posição X',
+    positionY: 'Posição Y',
+    previousImage: 'Imagem Anterior',
+    nextImage: 'Próxima Imagem',
+    imageNavigation: 'Navegação de Imagens',
+    timelineEditor: 'Editor em Linha do Tempo',
+    noStandardImagesTitle: 'Nenhuma Imagem Padrão',
+    noStandardImagesSubtitle: 'Adicione imagens padrão para começar a editar',
     
     // Buttons
     downloadThisImage: 'Baixar Imagem',
@@ -102,7 +123,7 @@ export const ptBR = {
 
     // Empty states
     noStandardImagesTitle: 'Nenhuma Imagem Padrão',
-    noStandardImagesSubtitle: 'Todas as suas imagens estão na capa ou você ainda não enviou imagens adicionais.',
+    noStandardImagesSubtitle: 'Adicione imagens padrão para começar a editar',
 
     // Resolution
     resolution: 'Resolução de Download',

@@ -7,7 +7,7 @@ export interface EditParams {
   brightness: number;
   contrast: number;
   saturation: number;
-  shadows: number;
+  highlights: number;
   sharpness: number;
 }
 
@@ -18,7 +18,7 @@ export const DEFAULT_EDIT_PARAMS: EditParams = {
   brightness: 0,
   contrast: 0,
   saturation: 0,
-  shadows: 0,
+  highlights: 0,
   sharpness: 0,
 };
 
@@ -26,6 +26,7 @@ export interface ImageFile {
   id: string;
   file: File;
   previewUrl: string;
+  name: string;
   editParams: EditParams;
 }
 
@@ -40,6 +41,21 @@ export interface CoverSlots {
 export const DEFAULT_COVER_SLOTS: CoverSlots = {
   top: null,
   bottomLeft: null,
+  bottomRight: null,
+};
+
+// Instagram Layout Types
+export type InstagramSlotKey = 'main' | 'topRight' | 'bottomRight';
+
+export interface InstagramSlots {
+  main: string | null;
+  topRight: string | null;
+  bottomRight: string | null;
+}
+
+export const DEFAULT_INSTAGRAM_SLOTS: InstagramSlots = {
+  main: null,
+  topRight: null,
   bottomRight: null,
 };
 

@@ -42,16 +42,37 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ image, editParams, s
 
     const { zoom, x, y, brightness, contrast, saturation, shadows, sharpness } = editParams;
     
-    // Apply CSS filters to the canvas context
-    const filters = [
-      `brightness(${100 + brightness}%)`,
-      `contrast(${100 + contrast}%)`,
-      `saturate(${100 + saturation}%)`,
-      `drop-shadow(0 0 ${Math.abs(shadows)}px rgba(0,0,0,${shadows < 0 ? 0.5 : 0}))`,
-      sharpness !== 0 ? `contrast(${100 + sharpness * 0.5}%)` : ''
-    ].filter(Boolean).join(' ');
+    const applyFilters = (ctx: CanvasRenderingContext2D) => {
+      const filters = [];
+      
+      if (editParams.brightness !== 0) {
+        filters.push(`brightness(${100 + editParams.brightness}%)`);
+      }
+      
+      if (editParams.contrast !== 0) {
+        filters.push(`contrast(${100 + editParams.contrast}%)`);
+      }
+      
+      if (editParams.saturation !== 0) {
+        filters.push(`saturate(${100 + editParams.saturation}%)`);
+      }
+      
+      if (editParams.highlights !== 0) {
+        // Highlights effect using brightness and contrast combination
+        const highlightValue = 100 + (editParams.highlights * 0.5);
+        filters.push(`brightness(${highlightValue}%)`);
+      }
+      
+      if (editParams.sharpness !== 0) {
+        // Sharpness effect using contrast
+        const sharpnessValue = 100 + (editParams.sharpness * 0.3);
+        filters.push(`contrast(${sharpnessValue}%)`);
+      }
+      
+      ctx.filter = filters.length > 0 ? filters.join(' ') : 'none';
+    };
     
-    ctx.filter = filters;
+    applyFilters(ctx);
     
     const hRatio = rect.width / image.width;
     const vRatio = rect.height / image.height;
@@ -143,9 +164,9 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ image, editParams, s
             step={1}
         />
         <Slider
-            label={ptBR.shadows}
-            value={editParams.shadows}
-            onChange={(e) => setEditParams({ shadows: parseFloat(e.target.value) })}
+            label={ptBR.highlights}
+            value={editParams.highlights}
+            onChange={(e) => setEditParams({ highlights: parseFloat(e.target.value) })}
             min={-20}
             max={20}
             step={1}

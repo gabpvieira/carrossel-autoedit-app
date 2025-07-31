@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './pages/DashboardPage';
 import EditorPage from './pages/EditorPage';
+import InstagramEditorPage from './pages/InstagramEditorPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 
@@ -11,6 +12,7 @@ const routes: { [key: string]: React.FC } = {
   '': DashboardPage,
   '#dashboard': DashboardPage,
   '#editor': EditorPage,
+  '#instagram-editor': InstagramEditorPage,
   '#analytics': AnalyticsPage,
   '#settings': ComingSoonPage,
   '#templates': ComingSoonPage,
