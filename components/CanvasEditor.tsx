@@ -42,38 +42,74 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ image, editParams, s
 
     const { zoom, x, y, brightness, contrast, saturation, shadows, sharpness } = editParams;
     
-    const applyFilters = (ctx: CanvasRenderingContext2D) => {
-      const filters = [];
+    const applyFiltersToImageData = (imageData: ImageData, params: EditParams) => {
+      const data = imageData.data;
+      const { brightness, contrast, saturation, highlights, sharpness } = params;
       
-      if (editParams.brightness !== 0) {
-        filters.push(`brightness(${100 + editParams.brightness}%)`);
+      // Convert parameters to usable values
+      const brightnessValue = brightness / 100;
+      const contrastValue = (contrast + 100) / 100;
+      const saturationValue = (saturation + 100) / 100;
+      const highlightsValue = highlights / 100;
+      const sharpnessValue = sharpness / 100;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        let r = data[i];
+        let g = data[i + 1];
+        let b = data[i + 2];
+        
+        // Apply brightness
+        if (brightness !== 0) {
+          r += brightnessValue * 255;
+          g += brightnessValue * 255;
+          b += brightnessValue * 255;
+        }
+        
+        // Apply contrast
+        if (contrast !== 0) {
+          r = ((r / 255 - 0.5) * contrastValue + 0.5) * 255;
+          g = ((g / 255 - 0.5) * contrastValue + 0.5) * 255;
+          b = ((b / 255 - 0.5) * contrastValue + 0.5) * 255;
+        }
+        
+        // Apply saturation
+        if (saturation !== 0) {
+          const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+          r = gray + (r - gray) * saturationValue;
+          g = gray + (g - gray) * saturationValue;
+          b = gray + (b - gray) * saturationValue;
+        }
+        
+        // Apply highlights (brighten lighter areas more)
+        if (highlights !== 0) {
+          const luminance = (r + g + b) / 3;
+          const factor = (luminance / 255) * highlightsValue;
+          r += factor * 255;
+          g += factor * 255;
+          b += factor * 255;
+        }
+        
+        // Apply sharpness (enhance contrast in mid-tones)
+        if (sharpness !== 0) {
+          const luminance = (r + g + b) / 3;
+          if (luminance > 64 && luminance < 192) {
+            const factor = 1 + sharpnessValue;
+            r = ((r / 255 - 0.5) * factor + 0.5) * 255;
+            g = ((g / 255 - 0.5) * factor + 0.5) * 255;
+            b = ((b / 255 - 0.5) * factor + 0.5) * 255;
+          }
+        }
+        
+        // Clamp values
+        data[i] = Math.max(0, Math.min(255, r));
+        data[i + 1] = Math.max(0, Math.min(255, g));
+        data[i + 2] = Math.max(0, Math.min(255, b));
       }
       
-      if (editParams.contrast !== 0) {
-        filters.push(`contrast(${100 + editParams.contrast}%)`);
-      }
-      
-      if (editParams.saturation !== 0) {
-        filters.push(`saturate(${100 + editParams.saturation}%)`);
-      }
-      
-      if (editParams.highlights !== 0) {
-        // Highlights effect using brightness and contrast combination
-        const highlightValue = 100 + (editParams.highlights * 0.5);
-        filters.push(`brightness(${highlightValue}%)`);
-      }
-      
-      if (editParams.sharpness !== 0) {
-        // Sharpness effect using contrast
-        const sharpnessValue = 100 + (editParams.sharpness * 0.3);
-        filters.push(`contrast(${sharpnessValue}%)`);
-      }
-      
-      ctx.filter = filters.length > 0 ? filters.join(' ') : 'none';
+      return imageData;
     };
     
-    applyFilters(ctx);
-    
+    // Draw image first without filters
     const hRatio = rect.width / image.width;
     const vRatio = rect.height / image.height;
     const ratio = Math.max(hRatio, vRatio);
@@ -85,6 +121,36 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ image, editParams, s
     ctx.translate(centerX + x, centerY + y);
     ctx.scale(finalZoom, finalZoom);
     ctx.drawImage(image, -image.width / 2, -image.height / 2, image.width, image.height);
+    
+    // Apply filters using ImageData if any filters are active
+    const hasFilters = brightness !== 0 || contrast !== 0 || saturation !== 0 || 
+                      editParams.highlights !== 0 || editParams.sharpness !== 0;
+    
+    if (hasFilters) {
+      ctx.restore();
+      ctx.save();
+      
+      // Get the image data from the canvas
+      const imageData = ctx.getImageData(0, 0, rect.width, rect.height);
+      
+      // Apply filters to the image data
+      const filteredImageData = applyFiltersToImageData(imageData, editParams);
+      
+      // Clear canvas and put the filtered image data back
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      
+      // Redraw checkerboard background
+      const checkSize = 20;
+      for (let x = 0; x < rect.width; x += checkSize) {
+        for (let y = 0; y < rect.height; y += checkSize) {
+          const isEven = (Math.floor(x / checkSize) + Math.floor(y / checkSize)) % 2 === 0;
+          ctx.fillStyle = isEven ? '#f0f0f0' : '#e0e0e0';
+          ctx.fillRect(x, y, checkSize, checkSize);
+        }
+      }
+      
+      ctx.putImageData(filteredImageData, 0, 0);
+    }
     
     ctx.restore();
   }, [image, editParams]);

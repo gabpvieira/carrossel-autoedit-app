@@ -28,6 +28,73 @@ const getFilename = (originalName: string, resolution: Resolution) => {
     return `facebook_${name}_${resLabel}.jpg`;
 };
 
+const applyFiltersToImageData = (imageData: ImageData, params: EditParams) => {
+    const data = imageData.data;
+    const { brightness, contrast, saturation, highlights, sharpness } = params;
+    
+    // Convert parameters to usable values
+    const brightnessValue = brightness / 100;
+    const contrastValue = (contrast + 100) / 100;
+    const saturationValue = (saturation + 100) / 100;
+    const highlightsValue = highlights / 100;
+    const sharpnessValue = sharpness / 100;
+    
+    for (let i = 0; i < data.length; i += 4) {
+        let r = data[i];
+        let g = data[i + 1];
+        let b = data[i + 2];
+        
+        // Apply brightness
+        if (brightness !== 0) {
+            r += brightnessValue * 255;
+            g += brightnessValue * 255;
+            b += brightnessValue * 255;
+        }
+        
+        // Apply contrast
+        if (contrast !== 0) {
+            r = ((r / 255 - 0.5) * contrastValue + 0.5) * 255;
+            g = ((g / 255 - 0.5) * contrastValue + 0.5) * 255;
+            b = ((b / 255 - 0.5) * contrastValue + 0.5) * 255;
+        }
+        
+        // Apply saturation
+        if (saturation !== 0) {
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            r = gray + (r - gray) * saturationValue;
+            g = gray + (g - gray) * saturationValue;
+            b = gray + (b - gray) * saturationValue;
+        }
+        
+        // Apply highlights (brighten lighter areas more)
+        if (highlights !== 0) {
+            const luminance = (r + g + b) / 3;
+            const factor = (luminance / 255) * highlightsValue;
+            r += factor * 255;
+            g += factor * 255;
+            b += factor * 255;
+        }
+        
+        // Apply sharpness (enhance contrast in mid-tones)
+        if (sharpness !== 0) {
+            const luminance = (r + g + b) / 3;
+            if (luminance > 64 && luminance < 192) {
+                const factor = 1 + sharpnessValue;
+                r = ((r / 255 - 0.5) * factor + 0.5) * 255;
+                g = ((g / 255 - 0.5) * factor + 0.5) * 255;
+                b = ((b / 255 - 0.5) * factor + 0.5) * 255;
+            }
+        }
+        
+        // Clamp values
+        data[i] = Math.max(0, Math.min(255, r));
+        data[i + 1] = Math.max(0, Math.min(255, g));
+        data[i + 2] = Math.max(0, Math.min(255, b));
+    }
+    
+    return imageData;
+};
+
 
 const drawImageToCanvas = (
     ctx: CanvasRenderingContext2D, 
@@ -48,16 +115,7 @@ const drawImageToCanvas = (
 
     const { zoom, x, y, brightness, contrast, saturation, shadows, sharpness } = params;
     
-    // Apply CSS filters to the canvas context
-    const filters = [
-        `brightness(${100 + brightness}%)`,
-        `contrast(${100 + contrast}%)`,
-        `saturate(${100 + saturation}%)`,
-        `drop-shadow(0 0 ${Math.abs(shadows)}px rgba(0,0,0,${shadows < 0 ? 0.5 : 0}))`,
-        sharpness !== 0 ? `contrast(${100 + sharpness * 0.5}%)` : ''
-    ].filter(Boolean).join(' ');
-    
-    ctx.filter = filters;
+    // We'll apply filters after drawing the image using ImageData for better compatibility
     
     const hRatio = dWidth / img.width;
     const vRatio = dHeight / img.height;
@@ -81,6 +139,21 @@ const drawImageToCanvas = (
     ctx.drawImage(img, -img.width / 2, -img.height / 2, img.width, img.height);
     
     ctx.restore();
+    
+    // Apply filters using ImageData if any filters are active
+    const hasFilters = brightness !== 0 || contrast !== 0 || saturation !== 0 || 
+                      params.highlights !== 0 || sharpness !== 0;
+    
+    if (hasFilters) {
+        // Get the image data from the specific region
+        const imageData = ctx.getImageData(dx, dy, dWidth, dHeight);
+        
+        // Apply filters to the image data
+        const filteredImageData = applyFiltersToImageData(imageData, params);
+        
+        // Put the filtered image data back
+        ctx.putImageData(filteredImageData, dx, dy);
+    }
 };
 
 export const exportStandardImage = async (img: HTMLImageElement, params: EditParams, originalName: string, resolution: Resolution): Promise<void> => {
