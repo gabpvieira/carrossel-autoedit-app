@@ -118,38 +118,43 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ image, editParams, s
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    ctx.translate(centerX + x, centerY + y);
-    ctx.scale(finalZoom, finalZoom);
-    ctx.drawImage(image, -image.width / 2, -image.height / 2, image.width, image.height);
+    // Calculate the actual image bounds on canvas
+    const imageWidth = image.width * finalZoom;
+    const imageHeight = image.height * finalZoom;
+    const imageX = centerX + x - imageWidth / 2;
+    const imageY = centerY + y - imageHeight / 2;
     
     // Apply filters using ImageData if any filters are active
     const hasFilters = brightness !== 0 || contrast !== 0 || saturation !== 0 || 
                       editParams.highlights !== 0 || editParams.sharpness !== 0;
     
     if (hasFilters) {
-      ctx.restore();
-      ctx.save();
+      // Draw image to a temporary canvas first
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = imageWidth;
+      tempCanvas.height = imageHeight;
+      const tempCtx = tempCanvas.getContext('2d')!;
       
-      // Get the image data from the canvas
-      const imageData = ctx.getImageData(0, 0, rect.width, rect.height);
+      tempCtx.imageSmoothingEnabled = true;
+      tempCtx.imageSmoothingQuality = 'high';
+      tempCtx.drawImage(image, 0, 0, imageWidth, imageHeight);
+      
+      // Get image data from temp canvas
+      const imageData = tempCtx.getImageData(0, 0, imageWidth, imageHeight);
       
       // Apply filters to the image data
       const filteredImageData = applyFiltersToImageData(imageData, editParams);
       
-      // Clear canvas and put the filtered image data back
-      ctx.clearRect(0, 0, rect.width, rect.height);
+      // Put filtered image data back to temp canvas
+      tempCtx.putImageData(filteredImageData, 0, 0);
       
-      // Redraw checkerboard background
-      const checkSize = 20;
-      for (let x = 0; x < rect.width; x += checkSize) {
-        for (let y = 0; y < rect.height; y += checkSize) {
-          const isEven = (Math.floor(x / checkSize) + Math.floor(y / checkSize)) % 2 === 0;
-          ctx.fillStyle = isEven ? '#f0f0f0' : '#e0e0e0';
-          ctx.fillRect(x, y, checkSize, checkSize);
-        }
-      }
-      
-      ctx.putImageData(filteredImageData, 0, 0);
+      // Draw the filtered image to main canvas
+      ctx.drawImage(tempCanvas, imageX, imageY);
+    } else {
+      // Draw image normally without filters
+      ctx.translate(centerX + x, centerY + y);
+      ctx.scale(finalZoom, finalZoom);
+      ctx.drawImage(image, -image.width / 2, -image.height / 2, image.width, image.height);
     }
     
     ctx.restore();

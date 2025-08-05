@@ -145,14 +145,31 @@ const drawImageToCanvas = (
                       params.highlights !== 0 || sharpness !== 0;
     
     if (hasFilters) {
-        // Get the image data from the specific region
-        const imageData = ctx.getImageData(dx, dy, dWidth, dHeight);
+        // Create temporary canvas for the image region
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = dWidth;
+        tempCanvas.height = dHeight;
+        const tempCtx = tempCanvas.getContext('2d')!;
+        
+        // Draw the image region to temp canvas
+        tempCtx.save();
+        tempCtx.translate(dWidth / 2, dHeight / 2);
+        tempCtx.translate(x * scaleFactor, y * scaleFactor);
+        tempCtx.scale(finalZoom, finalZoom);
+        tempCtx.drawImage(img, -img.width / 2, -img.height / 2, img.width, img.height);
+        tempCtx.restore();
+        
+        // Get image data from temp canvas
+        const imageData = tempCtx.getImageData(0, 0, dWidth, dHeight);
         
         // Apply filters to the image data
         const filteredImageData = applyFiltersToImageData(imageData, params);
         
-        // Put the filtered image data back
-        ctx.putImageData(filteredImageData, dx, dy);
+        // Put filtered image data back to temp canvas
+        tempCtx.putImageData(filteredImageData, 0, 0);
+        
+        // Draw the filtered result to main canvas
+        ctx.drawImage(tempCanvas, dx, dy);
     }
 };
 
