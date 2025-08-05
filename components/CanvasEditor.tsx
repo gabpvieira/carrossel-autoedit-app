@@ -193,7 +193,7 @@ export const CanvasEditor: React.FC<CanvasEditorProps> = ({ image, editParams, s
         <canvas
             ref={canvasRef}
             style={{aspectRatio: `${aspectRatio}`}}
-            className="w-full h-auto bg-gray-800 rounded-lg cursor-grab touch-none"
+            className="w-full h-auto rounded-lg cursor-grab touch-none"
             onMouseDown={(e) => handleDragStart(e.clientX, e.clientY)}
             onMouseMove={(e) => handleDragMove(e.clientX, e.clientY)}
             onMouseUp={handleDragEnd}
